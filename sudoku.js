@@ -87,8 +87,6 @@ function draw() {
        else text(board[j][i], i*height/9, j * height/9, height/9-1, height/9-1);
     }
   }
-
-  if(check()!=true)  reorder();
 }
 
 
@@ -140,8 +138,10 @@ function check() {
 }
 
 function solve(){
-  block=false;
-  loop();
+  block=true;
+while(!check()&&block){
+  reorder();
+}
 }
 
 function stopsolve(){
@@ -261,9 +261,11 @@ function reorder(){
           y=floor(random(9));
         }
           change[i][j]=change[x][y];
-          change[x][y]=temp;        
+          change[x][y]=temp;
+          if(check()) noLoop();        
       }
     }
+    if(check())noLoop();
   }
   merge();
 }
