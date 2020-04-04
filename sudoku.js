@@ -3,269 +3,191 @@ For creation of this the p5.js library was used
 Author of this version: Erharter Leonhard
 */
 
-let board;
-let fixed;
-let change;
+
 let columns = 9;
 let rows = 9;
 let canv;
-let size= screen.height/2;
-let cell = screen.height/18;
-let input;
-let genbut;
-let checkbut;
+let data;
 let upbut;
 let solvebut;
-let stopsolvebut;
-let info;
-let nums=[9,9,9,9,9,9,9,9,9];
-let block=false;
+let size= screen.height/2;
+let cell = screen.height/18;
+let ro;
 
-
-function setup() {
+function setup(){
 
   //creating the canvas where the cells will be drawn
   canv = createCanvas(size, size);
   canv.position((screen.width-size)/2,0);
 
 
-  //creating button elements for check, upload ,solve and stopsolve
+  //creating button elements for upload ,solve and stopsolve
 
-  checkbut = createButton('Check');
-  checkbut.position(10,70);
-  checkbut.mousePressed(check);
-
-  upbut = createFileInput(handleFile);
+  upbut = createFileInput(handleFile,);
   upbut.position(10,100);
 
   solvebut = createButton('Start Solve')
   solvebut.position(10,130);
   solvebut.mousePressed(solve);
 
-  stopsolvebut = createButton('Stop Solve')
-  stopsolvebut.position(10,160);
-  stopsolvebut.mousePressed(stopsolve);
-
   // Wacky way to make a 2D array is JS
-  board = new Array(columns);
+  data = new Array(columns);
   for (let i = 0; i < columns; i++) {
-    board[i] = new Array(rows);
+    data[i] = new Array(rows);
   }
-  fixed = new Array(columns);
-  for (let i = 0; i < columns; i++) {
-    fixed[i] = new Array(rows);
-  }
-  change = new Array(columns);
-  for (let i = 0; i < columns; i++) {
-    change[i] = new Array(rows);
-  }
-  //not looping the draw for better preformance
   noLoop();
-  pregen();
 }
 
 function draw() {
  
     
-  //drawing the grid background and lines
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      if(!check())fill(255,0,0)
-      else fill(0,255,0)
-      stroke(0);
-      rect(i*height/9, j * height/9, height/9-1, height/9-1);
+    //drawing the grid background and lines
+    for ( let i = 0; i < columns;i++) {
+      for ( let j = 0; j < rows;j++) {
+        if(!check())fill(255,0,0)
+        else fill(0,255,0)
+        stroke(0);
+        rect(i*size/9, j * size/9, size/9-1, size/9-1);
+      }
     }
-  }
-  //drawing the numbers
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      fill(0);
-      stroke(0);
-      textAlign(RIGHT,BOTTOM);
-      textSize(40);
-      if(board[j][i]==0) text('', i*height/9, j * height/9, height/9-1, height/9-1);
-       else text(board[j][i], i*height/9, j * height/9, height/9-1, height/9-1);
-    }
-  }
-}
-
-
-function pregen(){
-  //planned use for generating a new sudoku but computing power
-  // withput using backtracking is too small
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      fixed[i][j]=0;
-    }
-  }
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      change[i][j]='x';
-    }
-  }
-  let pos=0;
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      while(change[i][j]=='x'){
-          if(nums[pos]!=0){
-            change[i][j] = pos+1;
-            nums[pos]-=1;
-          }
-          else pos+=1;
+    //drawing the numbers
+    for ( let i = 0; i < columns;i++) {
+      for ( let j = 0; j < rows;j++) {
+        fill(0);
+        stroke(0);
+        textAlign(RIGHT,BOTTOM);
+        textSize(40);
+        if(data[j][i]==0) text('', i*size/9, j * size/9, size/9-1, size/9-1);
+         else text(data[j][i], i*size/9, j * size/9, size/9-1, size/9-1);
       }
     }
   }
-  merge();
-  redraw();
 
-}
+  function solvesud(){
+      let exc={};
+      for ( let vert = 0; vert < columns;vert++) {
+        for ( let horz = 0; horz < rows;horz++) {
+            if(data[vert][horz]==0){
+                exc={};
+                for(let i=0;i<9;i++){
+                    if(data[vert][i]>0) exc[data[vert][i]]=true;
+                    if(data[i][horz]>0) exc[data[i][horz]]=true;
+                }
+                for (let vertbx = floor(vert/3)*3;vertbx<floor(vert/3)*3+3;vertbx++){
+                    for (let horzbx = floor(horz/3)*3;horzbx<floor(horz/3)*3+3;horzbx++){
+                        if(data[vertbx][horzbx]>0) exc[data[vertbx][horzbx]]=true;
 
-function check() {
-  //checking if the solution is valid
-  for ( let i = 1; i < 4;i++) {
-    for ( let j = 1; j < 4;j++) {
-      if(!checkrect(i,j)) return false;
+                }
+            }
+      
+        ro=Object.keys(exc);
+        if(ro.length==8){
+            for(let i =1; i<10;i++){
+                if(ro.indexOf(i.toString())<0){ 
+                    data[vert][horz]=i;
+                }
+            }
+            }
+        }
     }
   }
-  for(let i = 0; i < 9;i++){
-    if(!checkcol(i)) return false;
-  }
-  for(let i = 0; i < 9;i++){
-    if(!checkrow(i)) return false;
-  }
-  redraw();
-  return true;
 }
 
 function solve(){
-  block=true;
-while(!check()&&block){
-  reorder();
-}
-}
-
-function stopsolve(){
-  block=false;
-  noLoop();
-}
-
-function handleFile(file){
-  //uploading a txt file from your pc
-  nums=[9,9,9,9,9,9,9,9,9];
-  let rv = 0;
-  let count = 0;
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      fixed[i][j]=file.data.charAt(rv);
-      if(count == 8){ rv+=3; count =0;}
-      else {rv+=2;  count+=1;}
+    while(check()!=true){
+        solvesud();
+        redraw();
     }
-  }
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-        if(fixed[i][j]==0)change[i][j]='x';
-        else change[i][j]=0;
-    }
-  }
+}
 
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      for(let k = 1; k<10;k++){
-        if(fixed[i][j]==k)nums[k-1]-=1;
+
+
+  function handleFile(file){
+    let rv = 0;
+    let count = 0;
+    for ( let i = 0; i < columns;i++) {
+      for ( let j = 0; j < rows;j++) {
+        data[i][j]=file.data.charAt(rv);
+        if(count == 8){ rv+=3; count =0;}
+        else {rv+=2;  count+=1;}
       }
     }
+    console.log(data);
+    redraw();
   }
-let pos=0;
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      while(change[i][j]=='x'){
-          if(nums[pos]!=0){
-            change[i][j] = pos+1;
-            nums[pos]-=1;
-          }
-          else pos+=1;
+
+  function check() {
+    //checking if the solution is valid
+
+    if(!checkcomp())return false;
+
+    for ( let i = 1; i < 4;i++) {
+      for ( let j = 1; j < 4;j++) {
+        if(!checkrect(i,j)) return false;
       }
     }
-  }
-
-  merge();
-  redraw();
-}
-
-function checkrect(x,y){
-  //checking a small 3x3 grid for correctness
-  let string='';
-  for ( let i = (x-1)*3; i < x*3;i++) {
-    for ( let j = (y-1)*3; j < y*3;j++) {
-      string+= board[i][j];
+    for(let i = 0; i < 9;i++){
+      if(!checkcol(i)) return false;
     }
+    for(let i = 0; i < 9;i++){
+      if(!checkrow(i)) return false;
+    }
+    redraw();
+    return true;
   }
-  for(let i = 1;i<10;i++){
-    let out=split(string,String(i));
-
-  if(out.length>2){
-    return false;
+  function checkcomp(){
+    for ( let vert = 0; vert < columns;vert++) {
+        for ( let horz = 0; horz < rows;horz++) {
+            if(data[vert][horz]==0||data[vert][horz]==null)return false;
+        }
+      }
+      return true;
   }
+  function checkrect(x,y){
+    //checking a small 3x3 grid for correctness
+    let string='';
+    for ( let i = (x-1)*3; i < x*3;i++) {
+      for ( let j = (y-1)*3; j < y*3;j++) {
+        string+= data[i][j];
+      }
+    }
+    for(let i = 1;i<10;i++){
+      let out=split(string,String(i));
+  
+    if(out.length>2){
+      return false;
+    }
+    }
+    return true;
+  }
+  
+  function checkcol(col){
+    //checking the columns 
+    let string='';
+    for ( let i = 0; i < 9;i++) {
+        string+= data[i][col];
+    }
+    for(let i = 1;i<10;i++){
+      let out=split(string,String(i));
+      if(out.length>2){
+      return false;
+    }
   }
   return true;
-}
-
-function checkcol(col){
-  //checking the columns 
-  let string='';
-  for ( let i = 0; i < 9;i++) {
-      string+= board[i][col];
   }
-  for(let i = 1;i<10;i++){
-    let out=split(string,String(i));
-    if(out.length>2){
-    return false;
-  }
-}
-return true;
-}
-
-function checkrow(row){
-  //checking the rows
-  let string='';
-  for ( let i = 0; i < 9;i++) {
-      string+= board[row][i];
-  }
-  for(let i = 1;i<10;i++){
-    let out=split(string,String(i));
-    if(out.length>2){
-    return false;
-  }
-}
-return true;
-}
-
-function merge(){
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      if(fixed[i][j]<change[i][j]) board[i][j]=change[i][j];
-      else board[i][j]=fixed[i][j];
+  
+  function checkrow(row){
+    //checking the rows
+    let string='';
+    for ( let i = 0; i < 9;i++) {
+        string+= data[row][i];
+    }
+    for(let i = 1;i<10;i++){
+      let out=split(string,String(i));
+      if(out.length>2){
+      return false;
     }
   }
-}
-
-function reorder(){
-  for ( let i = 0; i < columns;i++) {
-    for ( let j = 0; j < rows;j++) {
-      if(change[i][j]!=0){
-        let temp=change[i][j];
-        let x = floor(random(9));
-        let y = floor(random(9));
-        while(change[x][y]==0){
-          x=floor(random(9));
-          y=floor(random(9));
-        }
-          change[i][j]=change[x][y];
-          change[x][y]=temp;
-          if(check()) noLoop();        
-      }
-    }
-    if(check())noLoop();
+  return true;
   }
-  merge();
-}
+  
